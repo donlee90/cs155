@@ -24,7 +24,14 @@ min_samples_leafs = range(1, 100)
 min_samples_splits = range(2, 500)
 max_leaf_nodes = [None] + range(1, 100)
 
-# SVM
+# SVM parameters
+Cs = [1, 0.5, 0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001]
+kernels = ['rbf', 'linear', 'poly', 'sigmoid']
+degrees = range(1,5)
+# gamma
+# ceof0
+# tol
+# max_iter
 
 # Return error rate
 def get_error(G, Y):
@@ -44,7 +51,7 @@ def getXY(typeOfData):
     return X, Y
 
 # Output submission file
-def output_submission(typeOfData, filename):
+def output_submission(typeOfData, clf, filename):
     # Retrieve train data
     X,Y = getXY(typeOfData)
 

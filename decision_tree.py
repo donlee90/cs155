@@ -13,7 +13,8 @@ try:
     os.mkdir('result')
 except OSError:
     pass
-# Make result directory
+
+# Make predict directory
 try:
     os.mkdir('predict')
 except OSError:
@@ -65,5 +66,5 @@ for i in range(2):
     fout.write(max_output)
 
     # Output prediction
-    output_submission(typeOfData, predict_names[i])
+    output_submission(typeOfData, clf, predict_names[i])
 
