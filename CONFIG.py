@@ -17,7 +17,7 @@ ftest_names = {'raw':'data/kaggle_test_wc.csv', 'tf_idf':'data/kaggle_test_tf_id
 K = 5
 
 # Type of scoring functions
-scores = ['accuracy', 'average_precision', 'precision', 'recall', 'f1']
+scores = ['accuracy', 'precision', 'recall', 'f1']
 
 # Decision Tree parameters
 criterions = ["gini", "entropy"]
@@ -43,5 +43,10 @@ param_grid_SVM = [
    'kernel': ['sigmoid'],
    'gamma': [0.0, 1, 0.1, 0.01, 0.001, 0.0001],
    'coef0': [0.0, 1, 10, 100]}
+]
+
+param_grid_SVM_small = [
+  {'C': [1],
+   'kernel': ['rbf']},
 ]
 

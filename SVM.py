@@ -1,7 +1,6 @@
 from sklearn.svm import SVC
 from sklearn.grid_search import GridSearchCV
 from sklearn.cross_validation import train_test_split
-from sklearn.metrics import classification_report
 import matplotlib.pyplot as plt
 import os
 
@@ -9,7 +8,7 @@ from CONFIG import *
 from common import *
 
 fout_names = {'raw':'result/SVM_raw.csv', 'tf_idf':'result/SVM_tf_idf.csv'}
-predict_names = {'raw':'predict/SVM_raw.csv', 'tf_idf':'predict/SVM_tf_idf.csv'}
+predict_names = {'raw':'predict/SVM_raw', 'tf_idf':'predict/SVM_tf_idf'}
 
 # Make result directory
 try:
@@ -36,31 +35,31 @@ for typeOfData in types:
 
     # extensive grid search for best estimator
     for score in scores:
-        print ("Tuning hyper-parameters for %s" % score)
-        clf = GridSearchCV(SVC(), param_grid_SVM, cv=K, scoring=score,
-                n_jobs=3)
-        
-        output = "Best parameters set found on development set: \n"
-        output += clf.best_estimator_
-        output += "\nGrid scores on development set: \n"
-        for params, mean_score, grid_scores in clf.gird_scores_:
-            output += ("%0.3f (+/- %0.03f) for %r\n" % 
-            (mean_score, grid_scores.std() / 2, params))
-
-        clf = clf.fit(X_train, Y_train)
-        output += "\nDetailed Classification report:\n"
-        output += "The model is trained on the full development set.\n"
-        output += "The scores are computed on the full evaluation set.\n"
-        y_true, y_pred = Y_test, clf.predict(X_test)
-        output += classification_report(y_true, y_pred)
-
-        # Print final statistics
-        print output
-        with open(fout_names[typeOfData], 'w') as fout:
-            fout.write(output)
+        # grid search
+        print ("Tuning hyper-parameters for %s...\n" % score)
+        clf = GridSearchCV(SVC(), param_grid_SVM, cv=K, scoring=score)
 
         # train the model
+        print "Training for the entire data...\n"
         clf = clf.fit(X, Y)
+        
+        # Print final statistics
+        print "****** Statistics ******\n"
+        output = "Best score: "
+        output += str(clf.best_score_)
+        output += "\nBest parameters set found on development set: \n"
+        output += str(clf.best_estimator_)
+        output += "\n\nGrid scores on development set: \n"
+        for params, mean_score, grid_scores in clf.grid_scores_:
+            output += ("%0.3f (+/- %0.03f) for %r\n" % 
+            (mean_score, grid_scores.std() / 2, params))
+        print output
+        print "******* END *******\n"
+        with open(fout_names[typeOfData], 'w') as fout:
+            fout.write("------ {} ------\n".format(score))
+            fout.write(output)
 
         # Output prediction
-        output_submission(typeOfData, clf, predict_names[typeOfData])
+        print "Making prediction on test data...\n"
+        output_submission(typeOfData, clf, 
+                predict_names[typeOfData]+"_"+score+".csv")
