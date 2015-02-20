@@ -31,8 +31,8 @@ def getTrainData(typeOfData):
     with open(fin_names[typeOfData], 'r') as fin:
         data = np.array(list(csv.reader(fin)))
 
-    X = data[1:NUM_TRAININGS+1, 1:-1]
-    Y = data[1:NUM_TRAININGS+1, -1]
+    X = data[1:NUM_TRAININGS+1, 1:-1].astype(int)
+    Y = data[1:NUM_TRAININGS+1, -1].astype(int)
     return X, Y
 
 
