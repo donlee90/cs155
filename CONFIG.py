@@ -60,3 +60,12 @@ param_grid_SVM_small = [
    'kernel': ['rbf']},
 ]
 
+from sklearn.tree import DecisionTreeClassifier
+# AdaBoost parameters
+param_grid_AB = [
+  {'base_estimator': [DecisionTreeClassifier(max_depth=2),
+                      DecisionTreeClassifier(max_depth=3),
+                      DecisionTreeClassifier(max_depth=4)],
+   'n_estimators': [200, 400, 600, 800]}
+]
+
