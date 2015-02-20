@@ -1,45 +1,66 @@
-import csv
-import numpy as np
-
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.grid_search import GridSearchCV
+from sklearn.cross_validation import train_test_split
+import matplotlib.pyplot as plt
+import os
 
-NUM_TRAININGS = 4000
-NUM_TESTINGS = 9868
-f_train = 'kaggle_train_wc.csv'
-f_test = 'kaggle_test_wc.csv'
-data_dir = 'data/'
+from CONFIG import *
+from common import *
 
-# Load dataset
-with open(data_dir + f_train, 'r') as fin:
-	data = np.array(list(csv.reader(fin)))
+fout_names = {'raw':'result/RF_raw.csv', 'tf_idf':'result/RF_tf_idf.csv'}
+predict_names = {'raw':'predict/RF_raw', 'tf_idf':'predict/RF_tf_idf'}
 
-X_train = data[1:NUM_TRAININGS+1, 1:-1].astype(int)
-Y_train = data[1:NUM_TRAININGS+1, -1].astype(int)
+# Make result directory
+try:
+    os.mkdir('result')
+except OSError:
+    pass
 
-with open(data_dir + f_test, 'r') as fin:
-	data = np.array(list(csv.reader(fin)))
+# Make predict directory
+try:
+    os.mkdir('predict')
+except OSError:
+    pass
+ 
+# Finding the best parameter set
+for typeOfData in types:
+    print "---------------- ",
+    print typeOfData.upper(),
+    print " ----------------"
 
-X_test = data[1:NUM_TESTINGS+1, 1:].astype(int)
+    # retrieve train data
+    X, Y = getTrainData(typeOfData)
+    X_train, X_test, Y_train, Y_test = train_test_split(
+            X, Y, test_size=0.2)
 
-clf = RandomForestClassifier(n_estimators=400)
+    # extensive grid search for best estimator
+    for score in scores:
+        # grid search
+        print ("Tuning hyper-parameters for %s...\n" % score)
+        clf = GridSearchCV(RandomForestClassifier(), 
+                param_grid_RF, cv=K, scoring=score)
 
-# Cross Validation
-from sklearn import cross_validation
-K = 5
-scores = cross_validation.cross_val_score(clf, X_train, Y_train,\
-				cv=K, scoring='accuracy')
-avg_score = sum(scores) / len(scores)
-print('Scores = {}'.format(scores))
-print('avg_score = {}'.format(avg_score))
+        # train the model
+        print "Training for the entire data...\n"
+        clf = clf.fit(X, Y)
+        
+        # Print final statistics
+        print "****** Statistics ******\n"
+        output = "Best score: "
+        output += str(clf.best_score_)
+        output += "\nBest parameters set found on development set: \n"
+        output += str(clf.best_estimator_)
+        output += "\n\nGrid scores on development set: \n"
+        for params, mean_score, grid_scores in clf.grid_scores_:
+            output += ("%0.3f (+/- %0.03f) for %r\n" % 
+            (mean_score, grid_scores.std() / 2, params))
+        print output
+        print "******* END *******\n"
+        with open(fout_names[typeOfData], 'w') as fout:
+            fout.write("------ {} ------\n".format(score))
+            fout.write(output)
 
-# Output
-clf = clf.fit(X_train, Y_train)
-G_test = clf.predict(X_test)
-
-with open('sub.csv', 'w') as fout:
-	fout.write("Id,Prediction\n")
-	id_num = 0
-	for prediction in G_test:
-		id_num += 1
-		fout.write("%d,%d\n" % (id_num, prediction))
+        # Output prediction
+        print "Making prediction on test data...\n"
+        output_submission(typeOfData, clf, 
+                predict_names[typeOfData]+"_"+score+".csv")

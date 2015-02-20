@@ -1,12 +1,14 @@
-from sklearn import tree
-from sklearn import cross_validation
-import numpy as np
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.grid_search import GridSearchCV
+from sklearn.cross_validation import train_test_split
 import matplotlib.pyplot as plt
-import os, sys
-from CONFIG import *
+import os
 
-fout_names = ['result/DT_raw.csv', 'result/DT_tf_idf.csv']
-predict_names = ['predict/DT_raw.csv', 'predict/DT_tf_idf.csv']
+from CONFIG import *
+from common import *
+
+fout_names = {'raw':'result/DT_raw.csv', 'tf_idf':'result/DT_tf_idf.csv'}
+predict_names = {'raw':'predict/DT_raw', 'tf_idf':'predict/DT_tf_idf'}
 
 # Make result directory
 try:
@@ -20,51 +22,45 @@ try:
 except OSError:
     pass
  
-# Cross Validation
-for i in range(2):
-    typeOfData = 'raw' if i == 0 else 'tf_idf'
-    print "---------------- {} data ----------------".format(typeOfData)
+# Finding the best parameter set
+for typeOfData in types:
+    print "---------------- ",
+    print typeOfData.upper(),
+    print " ----------------"
 
-    # Retrieve train data
-    X, Y = getXY(typeOfData)
-    max_score = 0
-    max_output = ""
-    max_model = None
-    fout = open(fout_names[i], 'w')
+    # retrieve train data
+    X, Y = getTrainData(typeOfData)
+    X_train, X_test, Y_train, Y_test = train_test_split(
+            X, Y, test_size=0.2)
 
-    for criterion in criterions:
-        for max_depth in max_depths:
-            for min_samples_leaf in min_samples_leafs:
-                # initialize the tree model
-                clf = tree.DecisionTreeClassifier(
-                        criterion=criterion, 
-                        max_depth=max_depth,
-                        min_samples_leaf=min_samples_leaf)
+    # extensive grid search for best estimator
+    for score in scores:
+        # grid search
+        print ("Tuning hyper-parameters for %s...\n" % score)
+        clf = GridSearchCV(DecisionTreeClassifier(), 
+                param_grid_DT, cv=K, scoring=score)
 
-                # cross validate
-                scores = cross_validation.cross_val_score(
-                        clf, X, Y, cv=K, n_jobs=-1, scoring='accuracy')
+        # train the model
+        print "Training for the entire data...\n"
+        clf = clf.fit(X, Y)
+        
+        # Print final statistics
+        print "****** Statistics ******\n"
+        output = "Best score: "
+        output += str(clf.best_score_)
+        output += "\nBest parameters set found on development set: \n"
+        output += str(clf.best_estimator_)
+        output += "\n\nGrid scores on development set: \n"
+        for params, mean_score, grid_scores in clf.grid_scores_:
+            output += ("%0.3f (+/- %0.03f) for %r\n" % 
+            (mean_score, grid_scores.std() / 2, params))
+        print output
+        print "******* END *******\n"
+        with open(fout_names[typeOfData], 'w') as fout:
+            fout.write("------ {} ------\n".format(score))
+            fout.write(output)
 
-                # Print result
-                output = "criterion: {} / max_depth: {} / min_samples_leaf: {}\n".format(
-                          criterion, max_depth, min_samples_leaf)
-                output += "Scores = {}\nAccuracy = {:.2} (+/- {:.2})\n".format(
-                          scores, scores.mean(), scores.std() * 2)
-                print output
-                fout.write(output)
-
-                # Update max score
-                if max_score < scores.mean():
-                    max_score = scores.mean()
-                    max_output = output
-                    max_model = clf
-
-    # Print max score
-    print "**************** Maximum score ********************"
-    print max_output
-    fout.write("**************** Maximum score ********************")
-    fout.write(max_output)
-
-    # Output prediction
-    output_submission(typeOfData, clf, predict_names[i])
-
+        # Output prediction
+        print "Making prediction on test data...\n"
+        output_submission(typeOfData, clf, 
+                predict_names[typeOfData]+"_"+score+".csv")

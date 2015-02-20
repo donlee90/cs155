@@ -20,12 +20,22 @@ K = 5
 scores = ['accuracy', 'precision', 'recall', 'f1']
 
 # Decision Tree parameters
-criterions = ["gini", "entropy"]
-splitters = ["best", "random"]
-max_depths = [None] + range(1, 25)
-min_samples_leafs = range(1, 100)
-min_samples_splits = range(2, 500)
-max_leaf_nodes = [None] + range(1, 100)
+param_grid_DT = [
+    {'criterion': ["gini", "entropy"],
+     'max_depth': [None] + range(1, 25)}
+]
+param_grid_DT_2 = [
+    {'criterion': ["gini", "entropy"],
+     'min_samples_leaf': [None] + range(1, 25)}
+]
+
+# Random Forest
+param_grid_RF = [
+    {'criterion': ['gini', 'entropy']
+     'n_estimators': [1, 5, 10]
+     'bootstrap': [True, False]
+     'max_depth': [None] + range(1,25)}
+]
 
 # SVM parameters
 param_grid_SVM = [
