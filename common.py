@@ -50,4 +50,4 @@ def output_submission(typeOfData, clf, filename):
     with open(filename, 'w') as predict_f:
         predict_f.write("Id,Prediction")
         for i in range(NUM_TEST):
-            predict_f.write("\n{},{}".format(i+1, G[i]))
+            predict_f.write("\n%d,%d" % (i+1, G[i]))
