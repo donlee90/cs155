@@ -31,9 +31,9 @@ param_grid_DT_2 = [
 
 # Random Forest
 param_grid_RF = [
-    {'criterion': ['gini', 'entropy']
-     'n_estimators': [1, 5, 10]
-     'bootstrap': [True, False]
+    {'criterion': ['gini', 'entropy'],
+     'n_estimators': [1, 5, 10],
+     'bootstrap': [True, False],
      'max_depth': [None] + range(1,25)}
 ]
 
