@@ -26,7 +26,7 @@ param_grid_DT = [
 ]
 param_grid_DT_2 = [
     {'criterion': ["gini", "entropy"],
-     'min_samples_leaf': [None] + range(1, 25)}
+     'min_samples_leaf': range(1, 25)}
 ]
 
 # Random Forest
