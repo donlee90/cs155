@@ -7,7 +7,7 @@ import os
 from CONFIG import *
 from common import *
 
-fout_names = {'raw':'result/DT_raw.csv', 'tf_idf':'result/DT_tf_idf.csv'}
+fout_names = {'raw':'result/DT_raw', 'tf_idf':'result/DT_tf_idf'}
 predict_names = {'raw':'predict/DT_raw', 'tf_idf':'predict/DT_tf_idf'}
 
 def main():
@@ -57,7 +57,7 @@ def main():
                 (mean_score, grid_scores.std() / 2, params))
             print output
             print "******* END *******\n"
-            with open(fout_names[typeOfData], 'w') as fout:
+            with open(fout_names[typeOfData]+"_"+score+".txt", 'w') as fout:
                 fout.write("------ {} ------\n".format(score))
                 fout.write(output)
     
