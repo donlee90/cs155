@@ -1,7 +1,7 @@
 import csv
 import numpy as np
 
-filename = 'data.txt'
+filename = 'data/data.txt'
 
 def matrix_factorization(R, P, Q, K, steps=5000, alpha=0.0002, beta=0.02):
     Q = Q.T
@@ -44,6 +44,8 @@ def matrix_factorization(R, P, Q, K, steps=5000, alpha=0.0002, beta=0.02):
     return P, Q.T
 
 if __name__ == "__main__":
+
+    print "Loading data..."
     with open(filename, 'rU') as data_file:
         data = np.array(zip(*[line.strip().split('\t')
                     for line in data_file])).astype(int)
@@ -51,9 +53,11 @@ if __name__ == "__main__":
     num_users = len(set(data[0]))
     num_movies = len(set(data[1]))
 
-    print "num_users: %d" % num_users
-    print "num_movies: %d" % num_movies
+    print "  num_users: %d" % num_users
+    print "  num_movies: %d" % num_movies
+    print
 
+    print "Initializing..."
     # Initialize user/movie rating matrix
     # Row: N users
     # Col: M movies
@@ -66,7 +70,6 @@ if __name__ == "__main__":
 
         Y[user_id-1, movie_id-1] = rate
 
-    print Y
 
     K = 20 # number of latent factors
 
