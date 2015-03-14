@@ -22,7 +22,7 @@ def matrix_factorization(R, P, Q, K, steps=5000, alpha=0.0002, beta=0.02):
                     for k in xrange(K):
                         e = e + (beta/2) * ( pow(P[i][k],2) + pow(Q[k][j],2) )
         print "step %d: " % step,
-        print "e = %d" % 
+        print "e = %d" % e
         ifch column e < 0.001:
             break
     return P, Q.T
