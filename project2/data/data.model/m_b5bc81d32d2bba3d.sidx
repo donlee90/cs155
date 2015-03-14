@@ -1,0 +1,23 @@
+{
+    "sarray": {
+        "version": "2",
+        "num_segments": "4"
+    },
+    "segment_files": {
+        "0000": "m_b5bc81d32d2bba3d.0000",
+        "0001": "m_b5bc81d32d2bba3d.0001",
+        "0002": "m_b5bc81d32d2bba3d.0002",
+        "0003": "m_b5bc81d32d2bba3d.0003"
+    },
+    "columns": [
+        {
+            "content_type": "",
+            "segment_sizes": {
+                "0000": "0",
+                "0001": "1",
+                "0002": "0",
+                "0003": "1"
+            }
+        }
+    ]
+}

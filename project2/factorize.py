@@ -4,6 +4,7 @@ import os
 
 NUM_USERS = 943
 NUM_MOVIES = 1682
+K = 20
 
 def load_data(filename):
     data_file = filename.replace(".txt", ".sframe")
@@ -21,15 +22,15 @@ def load_data(filename):
                 raw_data['item_id'].append(line.split('\t')[1])
                 raw_data['rating'].append(int(line.split('\t')[2]))
         data = gl.SFrame(raw_data)
-        data.save(model)
+        data.save(data_file)
     return data
  
 def factorize(data):
     print "Factorizing..."
     m = gl.recommender.factorization_recommender.create(
-            data, target='rating', num_factors=20, 
-            regularization=10, max_iterations=100000,
-            solver='sgd')
+            data, target='rating', num_factors=K, 
+            #regularization=10, linear_regularization=10,
+            max_iterations=100000, solver='sgd')
 
     # Print the summary
     m.summary()
@@ -42,17 +43,27 @@ def factorize(data):
     return m
 
 def export(m, filename):
+    print "Exporting..."
+    m.summary()
+    print m['coefficients']
+    print "Sorting..."
     matrixname = filename.replace(".txt", ".matrix")
+    U_lst = [None] * NUM_USERS
+    V_lst = [None] * NUM_MOVIES
+    U_idx = list(m['coefficients']['user_id']['user_id'])
+    V_idx = list(m['coefficients']['item_id']['item_id'])
+    for i, user in enumerate(U_idx):
+        U_lst[int(user)-1] = map(str, m['coefficients']['user_id']['factors'][i])
+    for i, movie in enumerate(V_idx):
+        V_lst[int(movie)-1] = map(str, m['coefficients']['item_id']['factors'][i])
+
+    print "Writing..."
     with open(matrixname, 'w') as f:
-        U= m['coefficients']['user_id']['factors']
-        V= m['coefficients']['item_id']['factors']
-        for row in U:
-            for elem in row:
-                f.write(str(elem) + '\t')
+        for row in U_lst:
+            f.write('\t'.join(row))
             f.write('\n')
-        for row in V:
-            for elem in row:
-                f.write(str(elem) + '\t')
+        for row in V_lst:
+            f.write('\t'.join(row))
             f.write('\n')
 
 if __name__ == "__main__":
