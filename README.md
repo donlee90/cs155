@@ -1,2 +1,3 @@
 # cs155
-Kaggle Competition
+Project1: Kaggle Competition
+Project2: Collaborative Filtering
