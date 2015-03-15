@@ -5,6 +5,8 @@ import sys
 NUM_USERS = 943
 NUM_MOVIES = 1682
 K = 20
+C1 = 0
+C2 = 1
 
 MOVIE_FILE = 'data/movies.txt'
 
@@ -70,7 +72,7 @@ def top_rater():
     return np.argsort(user_cnt)
 
 
-def visualize(U, V, movies, movies_idx, c1, c2):
+def visualize(U, V, movies, movies_idx, out_file):
     print "\n----- Visualizing -----"
     print "\n----- Mean centering -----"
     V = V - np.mean(V, axis=1)[:, None]
@@ -81,8 +83,8 @@ def visualize(U, V, movies, movies_idx, c1, c2):
     print "\n---- SVD -----"
     A, s, B = np.linalg.svd(V)
     print A.shape, s.shape, B.shape
-    V_tilde = np.dot(A[:,np.array([c1,c2])].T, V)
-    U_tilde = np.dot(A[:,np.array([c1,c2])].T, U)
+    V_tilde = np.dot(A[:,np.array([C1,C2])].T, V)
+    U_tilde = np.dot(A[:,np.array([C1,C2])].T, U)
     print "--------------\n"
     print "\n----- Unit variance -----"
     V_tilde = V_tilde / np.std(V_tilde, axis=1)[:, None]
@@ -100,26 +102,33 @@ def visualize(U, V, movies, movies_idx, c1, c2):
     movie_y = V_tilde[1, interest]
     user_x = U_tilde[0, viewers]
     user_y = U_tilde[1, viewers]
-    plt.scatter(movie_x, movie_y, 'bo')
-    plt.scatter(user_x, user_y, 'rx')
+    plt.plot(movie_x, movie_y, 'ro')
+    #plt.plot(user_x, user_y, 'rx')
     for i in interest:
         name = movies_idx[i]
-        plt.annotate(name, (V_tilde[0, i], V_tilde[1, i]))
-    for i in viewers:
-        name = "user " + str(i)
-        plt.annotate(name, (U_tilde[0, i], U_tilde[1, i]))
-    plt.show()
+        plt.text(V_tilde[0, i] + 0.04, V_tilde[1, i] + 0.04, name, fontsize='xx-small')
+    #for i in viewers:
+    #    name = "user " + str(i)
+    #    plt.annotate(name, (U_tilde[0, i], U_tilde[1, i]))
+    plt.xlabel(r'$A_1$: Component 1')
+    plt.ylabel(r'$A_2$: Component 2')
+    plt.title(r'Projection of Movies onto $A_{1:2}$')
+    plt.axhline(y=0, ls='--', color='k')
+    plt.axvline(x=0, ls='--', color='k')
+    fig = plt.gcf()
+    #plt.show()
+    fig.savefig(out_file, dpi=720)
+    plt.close()
 
  
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print "Usage: python visualize.py [matrix_filename] [column1] [column2]"
-        print "e.g. python visualize.py matrix.txt 0 1"
+    if len(sys.argv) < 3:
+        print "Usage: python visualize.py [matrix] [image]"
+        print "e.g. python visualize.py matrix.txt out.png"
         sys.exit(1)
 
     matrix = sys.argv[1]
-    c1 = int(sys.argv[2])
-    c2 = int(sys.argv[3])
+    out_file = sys.argv[2]
     U, V = parse(matrix)
     movies, movies_idx = get_movies()
-    visualize(U, V, movies, movies_idx, c1, c2)
+    visualize(U, V, movies, movies_idx, out_file)
