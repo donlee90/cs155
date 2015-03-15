@@ -32,34 +32,48 @@ def parse(matrix):
 def get_movies(movie):
     print "Extract movie info..."
     movies = {}
+    movies_idx = [''] * NUM_MOVIES
     with open(movie, 'r') as f:
         lines = f.readlines()[0].split('\r')
         for line in lines:
-            idx = int(line.split('\t')[0])
+            idx = int(line.split('\t')[0])-1
             name = line.split('\t')[1].strip('"')[:-7].split(',')[0]
-            genres = [int(i) for i in line.split('\t')[2]]
+            genres = map(int, line.split('\t')[2:])
             movies[name] = {'idx':idx, 'genres':genres}
+            movies_idx[idx] = name
     
-    return movies
+    return movies, movies_idx
+
+def top_rated():
+    movie_cnt = np.zeros(NUM_MOVIES)
+    print movie_cnt
+    with open('data/data.txt', 'r') as f:
+        lines = f.readlines()[0].split('\r')
+        for line in lines:
+            movie_cnt[int(line.split('\t')[1])-1] += 1
+    
+    return np.argsort(movie_cnt)
 
 
-def visualize(U, V, movies):
+def visualize(U, V, movies, movies_idx):
     print "Compute SVD of V..."
     V = V - np.mean(V, axis=1)[:, None]
-    #print np.mean(V, axis=1)
+    print 'Mean = ', np.mean(V, axis=1)
     A, s, B = np.linalg.svd(V)
-    #print A.shape, s.shape, B.shape
+    print A.shape, s.shape, B.shape
     V_tilde = np.dot(A[:,:2].T, V)
     V_tilde = V_tilde / np.std(V_tilde, axis=1)[:, None]
-    print np.var(V_tilde)
+    print 'Variance = ', np.var(V_tilde, axis=1)
 
-    interest = np.array([movies[name]['idx'] for name in INTERESTING])
-    #print interest
+    #interest = np.array([movies[name]['idx'] for name in INTERESTING])
+    interest = top_rated()[-40:]
+    print interest
+
     movie_x = V_tilde[0, interest]
     movie_y = V_tilde[1, interest]
     plt.scatter(movie_x, movie_y)
-    for name in INTERESTING:
-        i = movies[name]['idx']
+    for i in interest:
+        name = movies_idx[i]
         plt.annotate(name, (V_tilde[0, i], V_tilde[1, i]))
     plt.show()
 
@@ -73,5 +87,5 @@ if __name__ == "__main__":
     matrix = sys.argv[1]
     movie = sys.argv[2]
     U, V = parse(matrix)
-    movies = get_movies(movie)
-    visualize(U, V, movies)
+    movies, movies_idx = get_movies(movie)
+    visualize(U, V, movies, movies_idx)
