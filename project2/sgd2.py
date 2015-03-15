@@ -40,7 +40,7 @@ def matrix_factorization(R, P, Q, K, steps=5000, alpha=0.0002, beta=0.02):
         print "|{:>15d}|{:>15.5f}|{:>15.5f}|{:>15.5f}|".format(step, mse, delta, l_rate)
 
         # Convergence Test
-        if delta < 0.0005:
+        if delta < 0.0001:
             break
 
         mse_prev = mse
@@ -90,5 +90,3 @@ if __name__ == "__main__":
 
     out_matrix = np.concatenate((nU, nV))
     np.savetxt('out.txt', out_matrix, delimiter='\t')
-    np.savetxt('U.txt', nU, delimiter='\t')
-    np.savetxt('V.txt', nV, delimiter='\t')
