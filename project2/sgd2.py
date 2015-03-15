@@ -1,49 +1,60 @@
 import csv
 import numpy as np
 
-filename = 'data.txt'
+filename = 'data/data.txt'
+N = 100000 # Number of data points
+K = 20 # Number of latent factors
 
 def matrix_factorization(R, P, Q, K, steps=5000, alpha=0.0002, beta=0.02):
     Q = Q.T
     l_rate = 0.02
-    e_prev = 0.0
+    mse_prev = 0.0
+
+    print "Running SGD..."
+    print "|{:^15s}|{:^15s}|{:^15s}|{:^15s}|".format("Step", "MSE", "Delta", "L Rate")
+    print "%s" % '-'*65
 
     for step in xrange(steps):
+
+        # Stochastic gradient descent
         for i in xrange(len(R)):
             for j in xrange(len(R[i])):
                 if R[i][j] > 0:
-                    eij = R[i][j] - np.dot(P[i,:],Q[:,j])
-                    P[i,:] = P[i,:] + l_rate * (2*eij*Q[:,j] - beta*P[i,:])
-                    Q[:,j] = Q[:,j] + l_rate * (2*eij*P[i,:] - beta*Q[:,j])
+                    pi = P[i,:]
+                    qj = Q[:,j]
+                    eij = R[i][j] - np.dot(pi, qj)
+
+                    P[i,:] = pi + l_rate * (2*eij*qj - beta*pi)
+                    Q[:,j] = qj + l_rate * (2*eij*pi - beta*qj)
                     
-        e = 0.0
-        n = 0
+        # Calculate mean squared error
+        mse = 0.0
         for i in xrange(len(R)):
             for j in xrange(len(R[i])):
                 if R[i][j] > 0:
-                    n = n + 1
-                    e = e + pow(R[i][j] - np.dot(P[i,:],Q[:,j]), 2)
+                    mse = mse + pow(R[i][j] - np.dot(P[i,:],Q[:,j]), 2)
 
-        e = e / n
-        e_rate = abs(e - e_prev)/e_prev
+        mse = mse / N
+        delta = abs(mse - mse_prev)
 
-        print "Step %d: " % step
-        print "  l_rate = %f" % l_rate
-        print "  e_prev = %f" % e_prev
-        print "  e      = %f" % e
-        print "  e_rate = %f" % e_rate
-        print
+        print "|{:>15d}|{:>15.5f}|{:>15.5f}|{:>15.5f}|".format(step, mse, delta, l_rate)
 
-        if e_rate < 0.0005:
+        # Convergence Test
+        if delta < 0.0005:
             break
-        e_prev = e
 
+        mse_prev = mse
+
+        # Update learning rate
         if l_rate > alpha:
             l_rate = l_rate * 0.9
 
     return P, Q.T
 
+
 if __name__ == "__main__":
+
+    print "Loading data..."
     with open(filename, 'rU') as data_file:
         data = np.array(zip(*[line.strip().split('\t')
                     for line in data_file])).astype(int)
@@ -51,12 +62,16 @@ if __name__ == "__main__":
     num_users = len(set(data[0]))
     num_movies = len(set(data[1]))
 
-    print "num_users: %d" % num_users
-    print "num_movies: %d" % num_movies
+    print "  num_users: %d" % num_users
+    print "  num_movies: %d" % num_movies
+    print
+
+    print "Initializing..."
+    print
 
     # Initialize user/movie rating matrix
-    # Row: N users
-    # Col: M movies
+    # Row: users
+    # Col: movies
     Y = np.zeros((num_users, num_movies))
 
     for column in data.T:
@@ -66,15 +81,10 @@ if __name__ == "__main__":
 
         Y[user_id-1, movie_id-1] = rate
 
-    print Y
-
-    K = 20 # number of latent factors
 
     # Initialize user matrix and movie matrix randomly
     U = np.random.rand(num_users, K)
     V = np.random.rand(num_movies, K)
-    a = np.random.rand(num_users)
-    b = np.random.rand(num_movies)
 
     nU, nV = matrix_factorization(Y, U, V, K)
 
